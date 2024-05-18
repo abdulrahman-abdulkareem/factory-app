@@ -1,0 +1,25 @@
+workflows:
+  android-workflow:
+    name: Android Workflow
+    environment:
+      vars:
+        FIREBASE_SERVICE_ACCOUNT_KEY: Encrypted(FIREBASE_SERVICE_ACCOUNT_KEY)
+    scripts:
+      - name: Set up Firebase CLI
+        script: |
+          curl -sL https://firebase.tools | bash
+      - name: Authenticate Firebase CLI
+        script: |
+          echo $FIREBASE_SERVICE_ACCOUNT_KEY > service-account.json
+          firebase auth:login --credential=service-account.json
+      - name: Build Android app
+        script: |
+          flutter build apk --release
+      - name: Upload to Firebase App Distribution
+        script: |
+          firebase appdistribution:distribute build/app/outputs/flutter-apk/app-release.apk \
+            --app <1:180628269862:android:f59e570a8208ade09b2fe7> \
+            --groups testers \
+            --release-notes "Automated build from Codemagic"
+    artifacts:
+      - build/app/outputs/flutter-apk/app-release.apk
